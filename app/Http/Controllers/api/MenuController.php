@@ -22,7 +22,7 @@ class MenuController extends Controller
 
     public function getByModulo($id)
     {
-        return response()->json($this->menuRepo->getByModulo($id));
+        return response()->json($this->menuRepo->getByIdModulo($id));
     }
 
     public function store(Request $request)

@@ -12,7 +12,7 @@ class MenuRepository implements MenuRepositoryInterface
 
     public function getByIdModulo($id)
     {
-     return Menu::where('id_modulo',$id)->all();   
+     return Menu::where('id_modulo',$id)->get();   
     }
 
     public function find($id)
