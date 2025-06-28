@@ -19,7 +19,13 @@ use App\Http\Controllers\api\RolusuarioController;
 
 Route::get('empresas-externo', [MetodosExternosController::class, 'empresas']);
 Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->name('login');
+Route::get('/login', function() {
+    return response()->json([
+        'message' => 'Unauthenticated.',
+        'error' => 'Please login using POST method with credentials'
+    ], 401);
+});
 
 
 Route::middleware('auth:api')->group(function () {
