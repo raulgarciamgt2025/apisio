@@ -3,16 +3,21 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\Api\EmpresaController;
-use App\Http\Controllers\Api\ModuloController;
-use App\Http\Controllers\Api\MenuController;
-use App\Http\Controllers\Api\OpcionController;
 
-use App\Http\Controllers\Api\RolController;
-use App\Http\Controllers\Api\UserController;
-use App\Http\Controllers\Api\RolopcionController;
-use App\Http\Controllers\Api\RolusuarioController;
+use App\Http\Controllers\api\MetodosExternosController;
 
+use App\Http\Controllers\api\EmpresaController;
+use App\Http\Controllers\api\ModuloController;
+use App\Http\Controllers\api\MenuController;
+use App\Http\Controllers\api\OpcionController;
+
+use App\Http\Controllers\api\RolController;
+use App\Http\Controllers\api\UserController;
+use App\Http\Controllers\api\RolopcionController;
+use App\Http\Controllers\api\RolusuarioController;
+
+
+Route::get('empresas-externo', [MetodosExternosController::class, 'empresas']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
