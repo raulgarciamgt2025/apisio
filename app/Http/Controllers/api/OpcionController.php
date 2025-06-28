@@ -17,7 +17,7 @@ class OpcionController extends Controller
 
     public function getByMenu($id)
     {
-        return response()->json($this->menuRepo->getByMenu($id));
+        return response()->json($this->opcionRepo->getByIdMenu($id));
     }
 
     public function index()
