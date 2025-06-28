@@ -46,7 +46,7 @@ class AuthController extends Controller
 
             if (!$tokenData = JWTAuth::attempt($credentials))
             {
-                return response()->json(['resultado' => false,'mensaje'=>'Credenciales incorrectas','errores'=>[],'token'=>'','accesos'=>''], 200);
+                return response()->json(['resultado' => false,'mensaje'=>'Credenciales incorrectas','errores'=>[],'id_usuario'=>'','usuario'=>'','token'=>'','accesos'=>''], 200);
             }
 
             $itemsAccesos  = DB::table('users as aa')
@@ -69,12 +69,18 @@ class AuthController extends Controller
                                 'b.id_opcion',
                                 'c.descripcion as opcion',
                                 'c.ruta',
+                                'aa.id',
+                                'aa.name',
                             ]);
                             
             $json = "[";
             $lstModulo = 0;
-            $lstMenu = 0;                        
+            $lstMenu = 0;              
+            $id_usuario = "";
+            $usuario = "";
             foreach ($itemsAccesos as $item) {
+                $id_usuario = $item->id;
+                $usuario = $item->name;
                 if ($item->id_modulo != $lstModulo) {
                     if ($lstMenu != 0) {
                         $json .= "]}, ";
@@ -116,11 +122,11 @@ class AuthController extends Controller
 
             $json .= "]";                
 
-            return response()->json(['resultado' => true,'mensaje'=>'Exito','errores'=>[],'token'=>$tokenData,'accesos'=>$json], 200);
+            return response()->json(['resultado' => true,'mensaje'=>'','errores'=>[],'id_usuario'=>$id_usuario,'usuario'=>$usuario,'token'=>$tokenData,'accesos'=>$json], 200);
         }
         catch (\Exception $e)
         {
-            return response()->json(['resultado' => false,'mensaje'=>$e->getMessage(),'errores'=>[],'token'=>'','accesos'=>''], 200);
+            return response()->json(['resultado' => false,'mensaje'=>$e->getMessage(),'errores'=>[],'id_usuario'=>'','usuario'=>'','token'=>'','accesos'=>''], 200);
         }
     }
 
