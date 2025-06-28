@@ -11,7 +11,7 @@ class OpcionRepository implements OpcionRepositoryInterface
     }
     public function getByIdMenu($id)
     {
-     return Opcion::where('id_menu',$id)->all();   
+     return Opcion::where('id_menu',$id)->get();   
     }
 
     public function find($id)
