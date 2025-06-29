@@ -40,7 +40,7 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('roles', RolController::class);
     Route::get('roles/empresa/{id}',[RolController::class, 'getByEmpresa']);
     Route::apiResource('usuarios', UserController::class);
-    Route::apiResource('rol-opcion', OpcionController::class);
+    Route::apiResource('rol-opcion', RolopcionController::class);
     Route::get('rol-opcion/empresa/{id}',[RolopcionController::class, 'getByEmpresa']);
     Route::get('rol-opcion/rol/{id}',[RolopcionController::class, 'getByRol']);
     Route::apiResource('rol-usuario', RolopcionController::class);

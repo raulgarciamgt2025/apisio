@@ -17,7 +17,7 @@ class RolRepository implements RolRepositoryInterface
 
     public function getByEmpresa($id)
     {
-        return Rol::where('id_empresa',$id)->all();   
+        return Rol::where('id_empresa',$id)->get();   
     }
 
 

@@ -3,11 +3,12 @@
 namespace App\Repositories;
 use App\Interfaces\RolopcionRepositoryInterface;
 use App\Models\Rolopcion;
+use App\Models\Vw_rol_opcion;
 class RolopcionRepository implements RolopcionRepositoryInterface
 {
     public function all()
     {
-        return Rolopcion::all();
+        return Vw_rol_opcion::all();
     }
 
     public function find($id)
@@ -17,12 +18,12 @@ class RolopcionRepository implements RolopcionRepositoryInterface
 
     public function getByEmpresa($id)
     {
-        return Rolopcion::where('id_empresa',$id)->all();   
+        return Vw_rol_opcion::where('id_empresa',$id)->get();   
     }
 
     public function getByRol($id)
     {
-        return Rolopcion::where('id_rol',$id)->all();   
+        return Vw_rol_opcion::where('id_rol',$id)->get();   
     }
 
     public function create(array $data)
@@ -44,3 +45,4 @@ class RolopcionRepository implements RolopcionRepositoryInterface
         return true;
     }
 }
+

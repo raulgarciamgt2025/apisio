@@ -2,7 +2,7 @@
 
 namespace App\Interfaces;
 use App\Interfaces\GenericRepositoryInterface;
-interface RolusuarioRepositoryInterface extends GenericRepositoryInterface
+interface RolopcionRepositoryInterface extends GenericRepositoryInterface
 {
     //
 }

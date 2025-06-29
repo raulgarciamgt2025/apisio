@@ -28,7 +28,7 @@ class RolopcionController extends Controller
     }
     public function store(Request $request)
     {
-        $post = $this->rolRepo->create($request->all());
+        $post = $this->Repo->create($request->all());
         return response()->json($post, 201);
     }
     public function show($id)
