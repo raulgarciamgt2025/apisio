@@ -3,11 +3,12 @@
 namespace App\Repositories;
 use App\Interfaces\RolusuarioRepositoryInterface;
 use App\Models\Rolusuario;
+use App\Models\Vw_rol_usuario;
 class RolusuarioRepository implements RolusuarioRepositoryInterface
 {
     public function all()
     {
-        return Rolusuario::all();
+        return Vw_rol_usuario::all();
     }
 
     public function find($id)
@@ -17,13 +18,13 @@ class RolusuarioRepository implements RolusuarioRepositoryInterface
 
     public function getByEmpresa($id)
     {
-        return Rolusuario::where('id_empresa',$id)->all();   
+        return Vw_rol_usuario::where('id_empresa',$id)->get();   
     }
 
 
     public function getByRol($id)
     {
-        return Rolusuario::where('id_rol',$id)->all();   
+        return Vw_rol_usuario::where('id_rol',$id)->get();   
     }
 
     public function create(array $data)

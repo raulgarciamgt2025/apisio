@@ -9,7 +9,7 @@ use App\Interfaces\RolusuarioRepositoryInterface;
 class RolusuarioController extends Controller
 {
     protected $Repo;
-    public function __construct(RolopcionRepositoryInterface $Repo)
+    public function __construct(RolusuarioRepositoryInterface $Repo)
     {
         $this->Repo = $Repo;
     }

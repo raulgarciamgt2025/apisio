@@ -43,7 +43,7 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('rol-opcion', RolopcionController::class);
     Route::get('rol-opcion/empresa/{id}',[RolopcionController::class, 'getByEmpresa']);
     Route::get('rol-opcion/rol/{id}',[RolopcionController::class, 'getByRol']);
-    Route::apiResource('rol-usuario', RolopcionController::class);
+    Route::apiResource('rol-usuario', RolusuarioController::class);
     Route::get('rol-usuario/empresa/{id}',[RolusuarioController::class, 'getByEmpresa']);
     Route::get('rol-usuario/rol/{id}',[RolusuarioController::class, 'getByRol']);
 });
