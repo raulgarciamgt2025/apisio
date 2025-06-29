@@ -30,7 +30,10 @@ class UserController extends Controller
     {
         return response()->json($this->repo->find($id));
     }
-
+    public function updatePassword(Request $request, $id)
+    {
+        return response()->json($this->repo->updatePassword($id, $request->all()));
+    }
     public function update(Request $request, $id)
     {
         return response()->json($this->repo->update($id, $request->all()));

@@ -31,12 +31,22 @@ class UserRepository implements UserRepositoryInterface
         return $user;
     }
 
+
     public function update($id, array $data)
     {
         
         $post = User::findOrFail($id);
         $post->name = $data["name"];
         $post->email = $data["email"];
+        $post->save();
+        return $post;
+    }
+
+    public function updatePassword($id, array $data)
+    {
+        
+        $post = User::findOrFail($id);
+        $post->password = Hash::make($data["password"]);
         $post->save();
         return $post;
     }
