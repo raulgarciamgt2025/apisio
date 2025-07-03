@@ -17,6 +17,7 @@ use App\Http\Controllers\api\RolopcionController;
 use App\Http\Controllers\api\RolusuarioController;
 use App\Http\Controllers\api\PeriodoController;
 use App\Http\Controllers\api\TipoProcesoController;
+use App\Http\Controllers\api\AreaController;
 
 
 Route::get('empresas-externo', [MetodosExternosController::class, 'empresas']);
@@ -58,4 +59,8 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('tipo-procesos', TipoProcesoController::class);
     Route::get('tipo-procesos/estado/{estado}',[TipoProcesoController::class, 'getByEstado']);
     Route::get('tipo-procesos/empresa/{id_empresa}',[TipoProcesoController::class, 'getByEmpresa']);
+    
+    Route::apiResource('areas', AreaController::class);
+    Route::get('areas/estado/{estado}',[AreaController::class, 'getByEstado']);
+    Route::get('areas/empresa/{id_empresa}',[AreaController::class, 'getByEmpresa']);
 });

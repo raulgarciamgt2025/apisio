@@ -23,6 +23,8 @@ use App\Interfaces\PeriodoRepositoryInterface;
 use App\Repositories\PeriodoRepository;
 use App\Interfaces\TipoProcesoRepositoryInterface;
 use App\Repositories\TipoProcesoRepository;
+use App\Interfaces\AreaRepositoryInterface;
+use App\Repositories\AreaRepository;
 
 use Illuminate\Support\ServiceProvider;
 
@@ -43,6 +45,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
         $this->app->bind(PeriodoRepositoryInterface::class, PeriodoRepository::class);
         $this->app->bind(TipoProcesoRepositoryInterface::class, TipoProcesoRepository::class);
+        $this->app->bind(AreaRepositoryInterface::class, AreaRepository::class);
     }
 
     /**
