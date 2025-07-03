@@ -50,17 +50,10 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('rol-usuario', RolusuarioController::class);
     Route::get('rol-usuario/empresa/{id}',[RolusuarioController::class, 'getByEmpresa']);
     Route::get('rol-usuario/rol/{id}',[RolusuarioController::class, 'getByRol']);
-    
     Route::apiResource('periodos', PeriodoController::class);
-    Route::get('periodos/estado/{estado}',[PeriodoController::class, 'getByEstado']);
     Route::get('periodos/empresa/{id_empresa}',[PeriodoController::class, 'getByEmpresa']);
-    Route::get('periodo-activo',[PeriodoController::class, 'getPeriodoActivo']);
-    
     Route::apiResource('tipo-procesos', TipoProcesoController::class);
-    Route::get('tipo-procesos/estado/{estado}',[TipoProcesoController::class, 'getByEstado']);
     Route::get('tipo-procesos/empresa/{id_empresa}',[TipoProcesoController::class, 'getByEmpresa']);
-    
     Route::apiResource('areas', AreaController::class);
-    Route::get('areas/estado/{estado}',[AreaController::class, 'getByEstado']);
     Route::get('areas/empresa/{id_empresa}',[AreaController::class, 'getByEmpresa']);
 });
