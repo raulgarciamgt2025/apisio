@@ -19,6 +19,10 @@ use App\Interfaces\RolusuarioRepositoryInterface;
 use App\Repositories\RolusuarioRepository;
 use App\Interfaces\UserRepositoryInterface;
 use App\Repositories\UserRepository;
+use App\Interfaces\PeriodoRepositoryInterface;
+use App\Repositories\PeriodoRepository;
+use App\Interfaces\TipoProcesoRepositoryInterface;
+use App\Repositories\TipoProcesoRepository;
 
 use Illuminate\Support\ServiceProvider;
 
@@ -37,6 +41,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(RolopcionRepositoryInterface::class, RolopcionRepository::class);
         $this->app->bind(RolusuarioRepositoryInterface::class, RolusuarioRepository::class);
         $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
+        $this->app->bind(PeriodoRepositoryInterface::class, PeriodoRepository::class);
+        $this->app->bind(TipoProcesoRepositoryInterface::class, TipoProcesoRepository::class);
     }
 
     /**
