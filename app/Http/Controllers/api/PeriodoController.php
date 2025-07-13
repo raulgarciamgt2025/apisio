@@ -31,9 +31,9 @@ class PeriodoController extends Controller
         $data = $request->validate([
             'label' => 'required|string|max:50',
             'fecha_inicio' => 'required|date',
-            'fecha_fin' => 'required|date|after:fecha_inicio',
+            'fecha_fin' => 'required|date',
             'estado' => 'required|string|in:SI,NO',
-            'id_empresa' => 'required|exists:empresas,id'
+            'id_empresa' => 'required|exists:empresa,id_empresa'
         ]);
 
 
@@ -49,9 +49,9 @@ class PeriodoController extends Controller
         $data = $request->validate([
             'label' => 'sometimes|string|max:50',
             'fecha_inicio' => 'sometimes|date',
-            'fecha_fin' => 'sometimes|date|after:fecha_inicio',
+            'fecha_fin' => 'sometimes|date',
             'estado' => 'sometimes|string|in:SI,NO',
-            'id_empresa' => 'sometimes|exists:empresas,id'
+            'id_empresa' => 'sometimes|exists:empresa,id_empresa'
         ]);
 
         return response()->json($this->periodoRepository->update($id, $data));

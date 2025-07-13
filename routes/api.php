@@ -16,6 +16,7 @@ use App\Http\Controllers\api\UserController;
 use App\Http\Controllers\api\RolopcionController;
 use App\Http\Controllers\api\RolusuarioController;
 use App\Http\Controllers\api\PeriodoController;
+use App\Http\Controllers\api\ProcesoController;
 use App\Http\Controllers\api\TipoProcesoController;
 use App\Http\Controllers\api\AreaController;
 
@@ -56,4 +57,6 @@ Route::middleware('auth:api')->group(function () {
     Route::get('tipo-procesos/empresa/{id_empresa}',[TipoProcesoController::class, 'getByEmpresa']);
     Route::apiResource('areas', AreaController::class);
     Route::get('areas/empresa/{id_empresa}',[AreaController::class, 'getByEmpresa']);
+    Route::apiResource('procesos', ProcesoController::class);
+    Route::get('procesos/empresa/{id_empresa}',[ProcesoController::class, 'getByEmpresa']);
 });

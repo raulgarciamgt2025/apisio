@@ -31,7 +31,7 @@ class AreaController extends Controller
         $data = $request->validate([
             'descripcion' => 'required|string|max:75',
             'estado' => 'required|string|in:SI,NO',
-            'id_empresa' => 'required|exists:empresas,id'
+            'id_empresa' => 'required|exists:empresa,id_empresa'
         ]);
 
         $area = $this->areaRepository->create($data);
@@ -44,7 +44,7 @@ class AreaController extends Controller
         $data = $request->validate([
             'descripcion' => 'sometimes|string|max:75',
             'estado' => 'sometimes|string|in:SI,NO',
-            'id_empresa' => 'sometimes|exists:empresas,id'
+            'id_empresa' => 'sometimes|exists:empresa,id_empresa'
         ]);
 
         return response()->json($this->areaRepository->update($id, $data));

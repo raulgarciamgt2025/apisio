@@ -25,7 +25,7 @@ class Periodo extends Model
         'fecha_fin' => 'datetime',
     ];
 
-    // Relationship with Empresa
+    public $timestamps = false;
     public function empresa()
     {
         return $this->belongsTo(Empresa::class, 'id_empresa', 'id');

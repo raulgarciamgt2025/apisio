@@ -106,7 +106,7 @@ class AuthController extends Controller
                 }
 
                 $json .= "{ ";
-                $json .= "key: '" . $item->id_opcion . "', ";
+                $json .= "key: '" . $item->id_menu ."-".$item->id_opcion . "', ";
                 $json .= "label: '" . $item->opcion . "', ";
                 $json .= "url: '" . $item->ruta . "', ";
                 $json .= "parentKey: '" . $item->id_menu . "', ";
