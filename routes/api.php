@@ -19,6 +19,7 @@ use App\Http\Controllers\api\PeriodoController;
 use App\Http\Controllers\api\ProcesoController;
 use App\Http\Controllers\api\TipoProcesoController;
 use App\Http\Controllers\api\AreaController;
+use App\Http\Controllers\api\PeriodoAreaProcesoController;
 
 
 Route::get('empresas-externo', [MetodosExternosController::class, 'empresas']);
@@ -59,4 +60,11 @@ Route::middleware('auth:api')->group(function () {
     Route::get('areas/empresa/{id_empresa}',[AreaController::class, 'getByEmpresa']);
     Route::apiResource('procesos', ProcesoController::class);
     Route::get('procesos/empresa/{id_empresa}',[ProcesoController::class, 'getByEmpresa']);
+    
+    // Periodo Area Proceso routes
+    Route::apiResource('periodo-area-proceso', PeriodoAreaProcesoController::class);
+    Route::get('periodo-area-proceso/periodo/{id_periodo}', [PeriodoAreaProcesoController::class, 'getByPeriodo']);
+    Route::get('periodo-area-proceso/area/{id_area}', [PeriodoAreaProcesoController::class, 'getByArea']);
+    Route::get('periodo-area-proceso/proceso/{id_proceso}', [PeriodoAreaProcesoController::class, 'getByProceso']);
+    Route::get('periodo-area-proceso/empresa/{id_empresa}', [PeriodoAreaProcesoController::class, 'getByEmpresa']);
 });
