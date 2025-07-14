@@ -40,6 +40,8 @@ class DocumentoController extends Controller
             'id_empresa' => 'required|integer|exists:empresa,id_empresa',
             'archivo' => 'nullable|string|max:255',
             'ruta' => 'nullable|string|max:500',
+            'archivo_final' => 'nullable|string|max:255',
+            'ruta_final' => 'nullable|string|max:500',
         ]);
 
         $data['id_usuario_grabo'] = Auth::id();
@@ -72,6 +74,8 @@ class DocumentoController extends Controller
             'id_empresa' => 'sometimes|required|integer|exists:empresa,id_empresa',
             'archivo' => 'sometimes|nullable|string|max:255',
             'ruta' => 'sometimes|nullable|string|max:500',
+            'archivo_final' => 'sometimes|nullable|string|max:255',
+            'ruta_final' => 'sometimes|nullable|string|max:500',
         ]);
 
         return response()->json($this->repository->update($id, $data));
@@ -249,6 +253,117 @@ class DocumentoController extends Controller
     public function deleteImage(int $idDocumento): JsonResponse
     {
         $result = $this->repository->deleteImage($idDocumento);
+        
+        if ($result['success']) {
+            return response()->json($result, 200);
+        } else {
+            return response()->json($result, 400);
+        }
+    }
+
+    /**
+     * Finalize document - update estado to 'F' and optionally upload final PDF
+     */
+    public function finalizeDocument(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'id_documento' => 'required|integer|exists:documentos,id_documento',
+            'base64_string' => 'nullable|string', // Optional: upload new final PDF
+            'id_usuario_cargo' => 'required|integer|exists:users,id',
+        ]);
+
+        // First check if document has archivo and ruta (as per your requirement)
+        $documento = $this->repository->find($data['id_documento']);
+        if (!$documento) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Documento no encontrado'
+            ], 404);
+        }
+
+        if (empty($documento->archivo) || empty($documento->ruta)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El documento debe tener un archivo cargado antes de finalizar'
+            ], 400);
+        }
+
+        // If a new PDF is provided, save it as final file
+        if (!empty($data['base64_string'])) {
+            $result = $this->repository->saveFinalImage(
+                $data['base64_string'], 
+                $data['id_documento'], 
+                $data['id_usuario_cargo']
+            );
+            
+            if (!$result['success']) {
+                return response()->json($result, 400);
+            }
+        }
+
+        // Update document estado to 'F' (Finalizado)
+        $updateResult = $this->repository->update($data['id_documento'], [
+            'estado' => Documento::ESTADO_FINALIZADO
+        ]);
+
+        if ($updateResult) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Documento finalizado exitosamente',
+                'data' => $this->repository->find($data['id_documento'])
+            ], 200);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al finalizar el documento'
+            ], 400);
+        }
+    }
+
+    /**
+     * Save final image from base64 string
+     */
+    public function saveImageFinal(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'base64_string' => 'required|string',
+            'id_documento' => 'required|integer|exists:documentos,id_documento',
+            'id_usuario_cargo_archivo_final' => 'required|integer|exists:users,id',
+        ]);
+
+        $result = $this->repository->saveFinalImage(
+            $data['base64_string'], 
+            $data['id_documento'], 
+            $data['id_usuario_cargo_archivo_final']
+        );
+        
+        if ($result['success']) {
+            return response()->json($result, 200);
+        } else {
+            return response()->json($result, 400);
+        }
+    }
+
+    /**
+     * Load final image as base64 string
+     */
+    public function loadImageFinal(int $idDocumento): JsonResponse
+    {
+        $result = $this->repository->loadFinalImage($idDocumento);
+        
+        if ($result['success']) {
+            return response()->json($result, 200);
+        } else {
+            return response()->json($result, 404);
+        }
+    }
+
+    /**
+     * Delete final image file
+     */
+    public function deleteImageFinal(int $idDocumento): JsonResponse
+    {
+        $result = $this->repository->deleteFinalImage($idDocumento);
         
         if ($result['success']) {
             return response()->json($result, 200);

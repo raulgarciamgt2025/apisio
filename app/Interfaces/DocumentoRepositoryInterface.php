@@ -70,6 +70,11 @@ interface DocumentoRepositoryInterface extends GenericRepositoryInterface
     public function saveImage(string $base64String, int $idDocumento, int $idUsuarioCargo): array;
 
     /**
+     * Save final document from base64 string and update documento record
+     */
+    public function saveFinalImage(string $base64String, int $idDocumento, int $idUsuarioCargo): array;
+
+    /**
      * Load document as base64 string from documento
      */
     public function loadImage(int $idDocumento): array;
@@ -78,4 +83,14 @@ interface DocumentoRepositoryInterface extends GenericRepositoryInterface
      * Delete document file and clear archivo/ruta fields from documento
      */
     public function deleteImage(int $idDocumento): array;
+
+    /**
+     * Load final document as base64 string from documento
+     */
+    public function loadFinalImage(int $idDocumento): array;
+
+    /**
+     * Delete final document file and clear archivo/ruta fields from documento
+     */
+    public function deleteFinalImage(int $idDocumento): array;
 }

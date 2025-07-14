@@ -22,6 +22,14 @@ return new class extends Migration
             $table->bigInteger('id_usuario_responsable')->unsigned();
             $table->char('estado', 1);
             $table->integer('id_empresa');
+            $table->string('archivo', 255)->nullable();
+            $table->string('ruta', 500)->nullable();
+            $table->timestamp('fecha_cargo_archivo')->nullable();
+            $table->bigInteger('id_usuario_cargo')->unsigned()->nullable();
+            $table->string('archivo_final', 255)->nullable();
+            $table->string('ruta_final', 500)->nullable();
+            $table->bigInteger('id_usuario_cargo_archivo_final')->unsigned()->nullable();
+            $table->timestamp('fecha_cargo_archivo_final')->nullable();
             
             // Indexes
             $table->index('id_configuracion');
@@ -29,6 +37,8 @@ return new class extends Migration
             $table->index('id_usuario_editor');
             $table->index('id_usuario_responsable');
             $table->index('id_empresa');
+            $table->index('id_usuario_cargo');
+            $table->index('id_usuario_cargo_archivo_final');
             
             // Add CHECK constraint for estado
             DB::statement("ALTER TABLE documentos ADD CONSTRAINT chk_estado CHECK (estado IN ('E', 'F', 'O'))");
@@ -41,6 +51,8 @@ return new class extends Migration
             // $table->foreign('id_usuario_grabo')->references('id')->on('users')->onDelete('restrict')->onUpdate('restrict');
             // $table->foreign('id_usuario_editor')->references('id')->on('users')->onDelete('restrict')->onUpdate('restrict');
             // $table->foreign('id_usuario_responsable')->references('id')->on('users')->onDelete('restrict')->onUpdate('restrict');
+            // $table->foreign('id_usuario_cargo')->references('id')->on('users')->onDelete('restrict')->onUpdate('restrict');
+            // $table->foreign('id_usuario_cargo_archivo_final')->references('id')->on('users')->onDelete('restrict')->onUpdate('restrict');
         });
     }
 

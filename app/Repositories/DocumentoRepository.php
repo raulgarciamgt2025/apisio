@@ -88,7 +88,8 @@ class DocumentoRepository implements DocumentoRepositoryInterface
             'usuarioGrabo',
             'usuarioEditor',
             'usuarioResponsable',
-            'usuarioCargo'
+            'usuarioCargo',
+            'usuarioCargoArchivoFinal'
         ])->get();
     }
 
@@ -158,7 +159,12 @@ class DocumentoRepository implements DocumentoRepositoryInterface
                 'a.ruta',
                 'a.fecha_cargo_archivo',
                 'a.id_usuario_cargo',
-                'i.name as usuario_cargo'
+                'i.name as usuario_cargo',
+                'a.archivo_final',
+                'a.ruta_final',
+                'a.fecha_cargo_archivo_final',
+                'a.id_usuario_cargo_archivo_final',
+                'j.name as usuario_cargo_archivo_final'
             ])
             ->join('periodo_area_proceso as b', 'a.id_configuracion', '=', 'b.id_configuracion')
             ->join('periodo as c', 'b.id_periodo', '=', 'c.id_periodo')
@@ -167,7 +173,8 @@ class DocumentoRepository implements DocumentoRepositoryInterface
             ->join('users as f', 'a.id_usuario_grabo', '=', 'f.id')
             ->join('users as g', 'a.id_usuario_editor', '=', 'g.id')
             ->join('users as h', 'a.id_usuario_responsable', '=', 'h.id')
-            ->leftJoin('users as i', 'a.id_usuario_cargo', '=', 'i.id');
+            ->leftJoin('users as i', 'a.id_usuario_cargo', '=', 'i.id')
+            ->leftJoin('users as j', 'a.id_usuario_cargo_archivo_final', '=', 'j.id');
 
         // Apply filters if provided
         if ($idPeriodo !== null) {
@@ -367,6 +374,150 @@ class DocumentoRepository implements DocumentoRepositoryInterface
     }
 
     /**
+     * Save final document from base64 string and update documento record
+     * 
+     * @param string $base64String Base64 encoded document string (PDF, Word, Excel)
+     * @param int $idDocumento ID of the documento to update
+     * @param int $idUsuarioCargo ID of the user who is uploading the final file
+     * @return array Result with success status and file information
+     */
+    public function saveFinalImage(string $base64String, int $idDocumento, int $idUsuarioCargo): array
+    {
+        try {
+            // Find the documento
+            $documento = $this->find($idDocumento);
+            if (!$documento) {
+                return [
+                    'success' => false,
+                    'message' => 'Documento no encontrado',
+                    'data' => null
+                ];
+            }
+
+            // Decode base64 string
+            $documentData = base64_decode($base64String);
+            if ($documentData === false) {
+                return [
+                    'success' => false,
+                    'message' => 'Cadena base64 inválida',
+                    'data' => null
+                ];
+            }
+
+            // Get file info from base64 string
+            $finfo = new \finfo(FILEINFO_MIME_TYPE);
+            $mimeType = $finfo->buffer($documentData);
+            
+            // Validate file type (Word, Excel, PDF only)
+            $allowedTypes = [
+                'application/pdf',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+                'application/msword', // .doc
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+                'application/vnd.ms-excel' // .xls
+            ];
+            if (!in_array($mimeType, $allowedTypes)) {
+                return [
+                    'success' => false,
+                    'message' => 'Tipo de archivo inválido. Tipos permitidos: PDF, Word (doc/docx), Excel (xls/xlsx)',
+                    'data' => null
+                ];
+            }
+
+            // Get file extension from mime type
+            $extensions = [
+                'application/pdf' => 'pdf',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
+                'application/msword' => 'doc',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
+                'application/vnd.ms-excel' => 'xls'
+            ];
+            $extension = $extensions[$mimeType];
+
+            // Create year/month path for final files
+            $currentDate = now();
+            $year = $currentDate->year;
+            $month = $currentDate->month;
+            $relativePath = "/final/{$year}/{$month}/";
+            $fullPath = "/var/www/html/iso/public_html/documentos{$relativePath}";
+
+            // Create directory if it doesn't exist
+            if (!file_exists($fullPath)) {
+                if (!mkdir($fullPath, 0755, true)) {
+                    return [
+                        'success' => false,
+                        'message' => 'Error al crear el directorio: ' . $fullPath,
+                        'data' => null
+                    ];
+                }
+            }
+
+            // Generate unique filename with UUID (32 characters)
+            $uuid = str_replace('-', '', Str::uuid()->toString()); // Remove hyphens to get 32 chars
+            $fileName = $uuid . '.' . $extension;
+            $fullFilePath = $fullPath . $fileName;
+
+            // Delete old final file if exists
+            if ($documento->archivo_final && $documento->ruta_final) {
+                $oldFilePath = "/var/www/html/iso/public_html/documentos{$documento->ruta_final}{$documento->archivo_final}";
+                if (file_exists($oldFilePath)) {
+                    unlink($oldFilePath);
+                }
+            }
+
+            // Save the final document file
+            if (file_put_contents($fullFilePath, $documentData) === false) {
+                return [
+                    'success' => false,
+                    'message' => 'Error al guardar el archivo final del documento',
+                    'data' => null
+                ];
+            }
+
+            // Update documento with new final file information
+            $updateResult = $this->update($idDocumento, [
+                'archivo_final' => $fileName,
+                'ruta_final' => $relativePath,
+                'fecha_cargo_archivo_final' => now(),
+                'id_usuario_cargo_archivo_final' => $idUsuarioCargo
+            ]);
+
+            if (!$updateResult) {
+                // If database update fails, delete the created file
+                if (file_exists($fullFilePath)) {
+                    unlink($fullFilePath);
+                }
+                return [
+                    'success' => false,
+                    'message' => 'Error al actualizar el registro del documento',
+                    'data' => null
+                ];
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Archivo final guardado exitosamente',
+                'data' => [
+                    'archivo_final' => $fileName,
+                    'ruta_final' => $relativePath,
+                    'full_path' => $fullFilePath,
+                    'file_size' => strlen($documentData),
+                    'mime_type' => $mimeType,
+                    'fecha_cargo_archivo_final' => now()->toDateTimeString(),
+                    'id_usuario_cargo_archivo_final' => $idUsuarioCargo
+                ]
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Error al guardar el archivo final: ' . $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+    /**
      * Load document as base64 string from documento
      * 
      * @param int $idDocumento ID of the documento
@@ -513,6 +664,143 @@ class DocumentoRepository implements DocumentoRepositoryInterface
             return [
                 'success' => false,
                 'message' => 'Error al eliminar el documento: ' . $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+    /**
+     * Load final image as base64 string
+     */
+    public function loadFinalImage(int $idDocumento): array
+    {
+        try {
+            $documento = $this->find($idDocumento);
+            if (!$documento) {
+                return [
+                    'success' => false,
+                    'message' => 'Documento no encontrado',
+                    'data' => null
+                ];
+            }
+
+            if (empty($documento->archivo_final) || empty($documento->ruta_final)) {
+                return [
+                    'success' => false,
+                    'message' => 'El documento no tiene archivo final cargado',
+                    'data' => null
+                ];
+            }
+
+            $filePath = "/var/www/html/iso/public_html/documentos{$documento->ruta_final}{$documento->archivo_final}";
+
+            if (!file_exists($filePath)) {
+                return [
+                    'success' => false,
+                    'message' => 'Archivo final no encontrado en el servidor',
+                    'data' => null
+                ];
+            }
+
+            $fileContent = file_get_contents($filePath);
+            if ($fileContent === false) {
+                return [
+                    'success' => false,
+                    'message' => 'Error al leer el archivo final',
+                    'data' => null
+                ];
+            }
+
+            $base64String = base64_encode($fileContent);
+            $fileInfo = pathinfo($filePath);
+            $fileSize = filesize($filePath);
+
+            return [
+                'success' => true,
+                'message' => 'Archivo final cargado exitosamente',
+                'data' => [
+                    'base64_string' => $base64String,
+                    'archivo_final' => $documento->archivo_final,
+                    'ruta_final' => $documento->ruta_final,
+                    'file_extension' => $fileInfo['extension'] ?? '',
+                    'file_size' => $fileSize,
+                    'fecha_cargo_archivo_final' => $documento->fecha_cargo_archivo_final,
+                    'id_usuario_cargo_archivo_final' => $documento->id_usuario_cargo_archivo_final
+                ]
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Error interno del servidor: ' . $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+    /**
+     * Delete final image file
+     */
+    public function deleteFinalImage(int $idDocumento): array
+    {
+        try {
+            $documento = $this->find($idDocumento);
+            if (!$documento) {
+                return [
+                    'success' => false,
+                    'message' => 'Documento no encontrado',
+                    'data' => null
+                ];
+            }
+
+            if (empty($documento->archivo_final) || empty($documento->ruta_final)) {
+                return [
+                    'success' => false,
+                    'message' => 'El documento no tiene archivo final cargado',
+                    'data' => null
+                ];
+            }
+
+            $filePath = "/var/www/html/iso/public_html/documentos{$documento->ruta_final}{$documento->archivo_final}";
+
+            // Delete physical file if it exists
+            if (file_exists($filePath)) {
+                if (!unlink($filePath)) {
+                    return [
+                        'success' => false,
+                        'message' => 'Error al eliminar el archivo final del servidor',
+                        'data' => null
+                    ];
+                }
+            }
+
+            // Update database to clear final file information
+            $updateResult = $this->update($idDocumento, [
+                'archivo_final' => null,
+                'ruta_final' => null,
+                'fecha_cargo_archivo_final' => null,
+                'id_usuario_cargo_archivo_final' => null
+            ]);
+
+            if (!$updateResult) {
+                return [
+                    'success' => false,
+                    'message' => 'Error al actualizar el registro del documento',
+                    'data' => null
+                ];
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Archivo final eliminado exitosamente',
+                'data' => [
+                    'id_documento' => $idDocumento,
+                    'archivo_final_eliminado' => $documento->archivo_final
+                ]
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Error interno del servidor: ' . $e->getMessage(),
                 'data' => null
             ];
         }

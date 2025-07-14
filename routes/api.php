@@ -85,6 +85,10 @@ Route::middleware('auth:api')->group(function () {
     
     // Image handling routes
     Route::post('documentos/save-image', [DocumentoController::class, 'saveImage']);
+    Route::post('documentos/save-image-final', [DocumentoController::class, 'saveImageFinal']);
     Route::get('documentos/{id_documento}/load-image', [DocumentoController::class, 'loadImage']);
+    Route::get('documentos/{id_documento}/load-image-final', [DocumentoController::class, 'loadImageFinal']);
     Route::delete('documentos/{id_documento}/delete-image', [DocumentoController::class, 'deleteImage']);
+    Route::delete('documentos/{id_documento}/delete-image-final', [DocumentoController::class, 'deleteImageFinal']);
+    Route::post('documentos/finalize', [DocumentoController::class, 'finalizeDocument']);
 });

@@ -38,6 +38,10 @@ class Documento extends Model
         'ruta',
         'fecha_cargo_archivo',
         'id_usuario_cargo',
+        'archivo_final',
+        'ruta_final',
+        'id_usuario_cargo_archivo_final',
+        'fecha_cargo_archivo_final',
     ];
 
     /**
@@ -46,11 +50,13 @@ class Documento extends Model
     protected $casts = [
         'fecha_grabo' => 'datetime',
         'fecha_cargo_archivo' => 'datetime',
+        'fecha_cargo_archivo_final' => 'datetime',
         'id_configuracion' => 'integer',
         'id_usuario_grabo' => 'integer',
         'id_usuario_editor' => 'integer',
         'id_usuario_responsable' => 'integer',
         'id_usuario_cargo' => 'integer',
+        'id_usuario_cargo_archivo_final' => 'integer',
         'id_empresa' => 'integer',
     ];
 
@@ -107,6 +113,14 @@ class Documento extends Model
     public function usuarioCargo(): BelongsTo
     {
         return $this->belongsTo(User::class, 'id_usuario_cargo', 'id');
+    }
+
+    /**
+     * Get the user who uploaded the final file for this documento.
+     */
+    public function usuarioCargoArchivoFinal(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'id_usuario_cargo_archivo_final', 'id');
     }
 
     /**
