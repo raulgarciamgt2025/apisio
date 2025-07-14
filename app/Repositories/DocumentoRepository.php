@@ -178,4 +178,293 @@ class DocumentoRepository implements DocumentoRepositoryInterface
 
         return $query->get();
     }
+
+    /**
+     * Save document from base64 string and update documento record
+     * 
+     * @param string $base64String Base64 encoded document string (PDF, Word, Excel)
+     * @param int $idDocumento ID of the documento to update
+     * @return array Result with success status and file information
+     */
+    public function saveImage(string $base64String, int $idDocumento): array
+    {
+        try {
+            // Find the documento
+            $documento = $this->find($idDocumento);
+            if (!$documento) {
+                return [
+                    'success' => false,
+                    'message' => 'Documento no encontrado',
+                    'data' => null
+                ];
+            }
+
+            // Decode base64 string
+            $documentData = base64_decode($base64String);
+            if ($documentData === false) {
+                return [
+                    'success' => false,
+                    'message' => 'Cadena base64 inválida',
+                    'data' => null
+                ];
+            }
+
+            // Get file info from base64 string
+            $finfo = new \finfo(FILEINFO_MIME_TYPE);
+            $mimeType = $finfo->buffer($documentData);
+            
+            // Validate file type (Word, Excel, PDF only)
+            $allowedTypes = [
+                'application/pdf',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+                'application/msword', // .doc
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+                'application/vnd.ms-excel' // .xls
+            ];
+            if (!in_array($mimeType, $allowedTypes)) {
+                return [
+                    'success' => false,
+                    'message' => 'Tipo de archivo inválido. Tipos permitidos: PDF, Word (doc/docx), Excel (xls/xlsx)',
+                    'data' => null
+                ];
+            }
+
+            // Get file extension from mime type
+            $extensions = [
+                'application/pdf' => 'pdf',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
+                'application/msword' => 'doc',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
+                'application/vnd.ms-excel' => 'xls'
+            ];
+            $extension = $extensions[$mimeType];
+
+            // Create year/month path
+            $currentDate = now();
+            $year = $currentDate->year;
+            $month = $currentDate->month;
+            $relativePath = "/{$year}/{$month}/";
+            $fullPath = "/var/www/html/iso/public_html/documentos{$relativePath}";
+
+            // Create directory if it doesn't exist
+            if (!file_exists($fullPath)) {
+                if (!mkdir($fullPath, 0755, true)) {
+                    return [
+                        'success' => false,
+                        'message' => 'Error al crear el directorio: ' . $fullPath,
+                        'data' => null
+                    ];
+                }
+            }
+
+            // Generate unique filename
+            $uniqueId = uniqid();
+            $fileName = $uniqueId . '.' . $extension;
+            $fullFilePath = $fullPath . $fileName;
+
+            // Delete old file if exists
+            if ($documento->archivo && $documento->ruta) {
+                $oldFilePath = "/var/www/html/iso/public_html/documentos{$documento->ruta}{$documento->archivo}";
+                if (file_exists($oldFilePath)) {
+                    unlink($oldFilePath);
+                }
+            }
+
+            // Save the document file
+            if (file_put_contents($fullFilePath, $documentData) === false) {
+                return [
+                    'success' => false,
+                    'message' => 'Error al guardar el archivo del documento',
+                    'data' => null
+                ];
+            }
+
+            // Update documento with new file information
+            $updateResult = $this->update($idDocumento, [
+                'archivo' => $fileName,
+                'ruta' => $relativePath
+            ]);
+
+            if (!$updateResult) {
+                // If database update fails, delete the created file
+                if (file_exists($fullFilePath)) {
+                    unlink($fullFilePath);
+                }
+                return [
+                    'success' => false,
+                    'message' => 'Error al actualizar el registro del documento',
+                    'data' => null
+                ];
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Documento guardado exitosamente',
+                'data' => [
+                    'archivo' => $fileName,
+                    'ruta' => $relativePath,
+                    'full_path' => $fullFilePath,
+                    'file_size' => strlen($documentData),
+                    'mime_type' => $mimeType
+                ]
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Error al guardar el documento: ' . $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+    /**
+     * Load document as base64 string from documento
+     * 
+     * @param int $idDocumento ID of the documento
+     * @return array Result with success status and base64 document data
+     */
+    public function loadImage(int $idDocumento): array
+    {
+        try {
+            // Find the documento
+            $documento = $this->find($idDocumento);
+            if (!$documento) {
+                return [
+                    'success' => false,
+                    'message' => 'Documento no encontrado',
+                    'data' => null
+                ];
+            }
+
+            // Check if documento has a document file
+            if (!$documento->archivo || !$documento->ruta) {
+                return [
+                    'success' => false,
+                    'message' => 'No hay archivo de documento asociado con este documento',
+                    'data' => null
+                ];
+            }
+
+            // Build full file path
+            $fullFilePath = "/var/www/html/iso/public_html/documentos{$documento->ruta}{$documento->archivo}";
+
+            // Check if file exists
+            if (!file_exists($fullFilePath)) {
+                return [
+                    'success' => false,
+                    'message' => 'Archivo de documento no encontrado: ' . $fullFilePath,
+                    'data' => null
+                ];
+            }
+
+            // Read file content
+            $documentData = file_get_contents($fullFilePath);
+            if ($documentData === false) {
+                return [
+                    'success' => false,
+                    'message' => 'Error al leer el archivo del documento',
+                    'data' => null
+                ];
+            }
+
+            // Get mime type
+            $finfo = new \finfo(FILEINFO_MIME_TYPE);
+            $mimeType = $finfo->file($fullFilePath);
+
+            // Convert to base64
+            $base64String = base64_encode($documentData);
+
+            return [
+                'success' => true,
+                'message' => 'Documento cargado exitosamente',
+                'data' => [
+                    'base64' => $base64String,
+                    'mime_type' => $mimeType,
+                    'file_size' => strlen($documentData),
+                    'archivo' => $documento->archivo,
+                    'ruta' => $documento->ruta,
+                    'data_uri' => "data:{$mimeType};base64,{$base64String}"
+                ]
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Error al cargar el documento: ' . $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+    /**
+     * Delete document file and clear archivo/ruta fields from documento
+     * 
+     * @param int $idDocumento ID of the documento
+     * @return array Result with success status
+     */
+    public function deleteImage(int $idDocumento): array
+    {
+        try {
+            // Find the documento
+            $documento = $this->find($idDocumento);
+            if (!$documento) {
+                return [
+                    'success' => false,
+                    'message' => 'Documento no encontrado',
+                    'data' => null
+                ];
+            }
+
+            // Check if documento has a document file
+            if (!$documento->archivo || !$documento->ruta) {
+                return [
+                    'success' => false,
+                    'message' => 'No hay archivo de documento asociado con este documento',
+                    'data' => null
+                ];
+            }
+
+            // Build full file path
+            $fullFilePath = "/var/www/html/iso/public_html/documentos{$documento->ruta}{$documento->archivo}";
+
+            // Delete file if it exists
+            if (file_exists($fullFilePath)) {
+                if (!unlink($fullFilePath)) {
+                    return [
+                        'success' => false,
+                        'message' => 'Error al eliminar el archivo del documento',
+                        'data' => null
+                    ];
+                }
+            }
+
+            // Clear archivo and ruta fields
+            $updateResult = $this->update($idDocumento, [
+                'archivo' => null,
+                'ruta' => null
+            ]);
+
+            if (!$updateResult) {
+                return [
+                    'success' => false,
+                    'message' => 'Error al actualizar el registro del documento',
+                    'data' => null
+                ];
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Documento eliminado exitosamente',
+                'data' => null
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Error al eliminar el documento: ' . $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
 }

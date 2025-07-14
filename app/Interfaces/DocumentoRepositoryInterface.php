@@ -58,4 +58,19 @@ interface DocumentoRepositoryInterface extends GenericRepositoryInterface
      * Get documentos with detailed information including related data
      */
     public function getDocumentosWithDetails(?int $idPeriodo = null, ?int $idArea = null, ?int $idProceso = null): \Illuminate\Support\Collection;
+
+    /**
+     * Save document from base64 string and update documento record
+     */
+    public function saveImage(string $base64String, int $idDocumento): array;
+
+    /**
+     * Load document as base64 string from documento
+     */
+    public function loadImage(int $idDocumento): array;
+
+    /**
+     * Delete document file and clear archivo/ruta fields from documento
+     */
+    public function deleteImage(int $idDocumento): array;
 }

@@ -190,4 +190,51 @@ class DocumentoController extends Controller
 
         return response()->json($this->repository->getDocumentosWithDetails($idPeriodo, $idArea, $idProceso));
     }
+
+    /**
+     * Save image from base64 string
+     */
+    public function saveImage(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'base64_string' => 'required|string',
+            'id_documento' => 'required|integer|exists:documentos,id_documento',
+        ]);
+
+        $result = $this->repository->saveImage($data['base64_string'], $data['id_documento']);
+        
+        if ($result['success']) {
+            return response()->json($result, 200);
+        } else {
+            return response()->json($result, 400);
+        }
+    }
+
+    /**
+     * Load image as base64 string
+     */
+    public function loadImage(int $idDocumento): JsonResponse
+    {
+        $result = $this->repository->loadImage($idDocumento);
+        
+        if ($result['success']) {
+            return response()->json($result, 200);
+        } else {
+            return response()->json($result, 404);
+        }
+    }
+
+    /**
+     * Delete image file
+     */
+    public function deleteImage(int $idDocumento): JsonResponse
+    {
+        $result = $this->repository->deleteImage($idDocumento);
+        
+        if ($result['success']) {
+            return response()->json($result, 200);
+        } else {
+            return response()->json($result, 400);
+        }
+    }
 }
