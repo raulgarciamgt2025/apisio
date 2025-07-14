@@ -60,9 +60,14 @@ interface DocumentoRepositoryInterface extends GenericRepositoryInterface
     public function getDocumentosWithDetails(?int $idPeriodo = null, ?int $idArea = null, ?int $idProceso = null): \Illuminate\Support\Collection;
 
     /**
+     * Get documentos by empresa, periodo and usuario editor with area and proceso information
+     */
+    public function getDocumentosByEmpresaPeriodoEditor(int $idEmpresa, int $idPeriodo, int $idUsuarioEditor): \Illuminate\Support\Collection;
+
+    /**
      * Save document from base64 string and update documento record
      */
-    public function saveImage(string $base64String, int $idDocumento): array;
+    public function saveImage(string $base64String, int $idDocumento, int $idUsuarioCargo): array;
 
     /**
      * Load document as base64 string from documento

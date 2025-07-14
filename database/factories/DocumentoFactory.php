@@ -46,6 +46,8 @@ class DocumentoFactory extends Factory
                 '/documentos/manuales/',
                 '/documentos/formatos/'
             ]),
+            'fecha_cargo_archivo' => $this->faker->optional(0.7)->dateTimeThisYear(),
+            'id_usuario_cargo' => $this->faker->optional(0.7)->numberBetween(1, 5),
         ];
     }
 

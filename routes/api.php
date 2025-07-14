@@ -81,6 +81,7 @@ Route::middleware('auth:api')->group(function () {
     Route::post('documentos/date-range', [DocumentoController::class, 'getByDateRange']);
     Route::get('documentos/periodo-area-proceso/{id_periodo}/{id_area}/{id_proceso}', [DocumentoController::class, 'getByPeriodoAreaProceso']);
     Route::get('documentos-details', [DocumentoController::class, 'getDocumentosWithDetails']);
+    Route::post('documentos/empresa-periodo-editor', [DocumentoController::class, 'getDocumentosByEmpresaPeriodoEditor']);
     
     // Image handling routes
     Route::post('documentos/save-image', [DocumentoController::class, 'saveImage']);

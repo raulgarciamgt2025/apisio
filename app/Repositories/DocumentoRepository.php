@@ -6,6 +6,7 @@ use App\Interfaces\DocumentoRepositoryInterface;
 use App\Models\Documento;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class DocumentoRepository implements DocumentoRepositoryInterface
 {
@@ -86,7 +87,8 @@ class DocumentoRepository implements DocumentoRepositoryInterface
             'empresa',
             'usuarioGrabo',
             'usuarioEditor',
-            'usuarioResponsable'
+            'usuarioResponsable',
+            'usuarioCargo'
         ])->get();
     }
 
@@ -153,7 +155,10 @@ class DocumentoRepository implements DocumentoRepositoryInterface
                 'a.estado',
                 'a.id_empresa',
                 'a.archivo',
-                'a.ruta'
+                'a.ruta',
+                'a.fecha_cargo_archivo',
+                'a.id_usuario_cargo',
+                'i.name as usuario_cargo'
             ])
             ->join('periodo_area_proceso as b', 'a.id_configuracion', '=', 'b.id_configuracion')
             ->join('periodo as c', 'b.id_periodo', '=', 'c.id_periodo')
@@ -161,7 +166,8 @@ class DocumentoRepository implements DocumentoRepositoryInterface
             ->join('proceso as e', 'b.id_proceso', '=', 'e.id_proceso')
             ->join('users as f', 'a.id_usuario_grabo', '=', 'f.id')
             ->join('users as g', 'a.id_usuario_editor', '=', 'g.id')
-            ->join('users as h', 'a.id_usuario_responsable', '=', 'h.id');
+            ->join('users as h', 'a.id_usuario_responsable', '=', 'h.id')
+            ->leftJoin('users as i', 'a.id_usuario_cargo', '=', 'i.id');
 
         // Apply filters if provided
         if ($idPeriodo !== null) {
@@ -180,13 +186,51 @@ class DocumentoRepository implements DocumentoRepositoryInterface
     }
 
     /**
+     * Get documentos by empresa, periodo and usuario editor with area and proceso information
+     * 
+     * @param int $idEmpresa ID of the empresa
+     * @param int $idPeriodo ID of the periodo
+     * @param int $idUsuarioEditor ID of the usuario editor
+     * @return \Illuminate\Support\Collection
+     */
+    public function getDocumentosByEmpresaPeriodoEditor(int $idEmpresa, int $idPeriodo, int $idUsuarioEditor): \Illuminate\Support\Collection
+    {
+        return DB::table('periodo_area_proceso as a')
+            ->select([
+                'a.id_configuracion',
+                'b.id_documento',
+                'a.id_area',
+                'c.descripcion as area',
+                'a.id_proceso',
+                'd.descripcion as proceso',
+                'b.descripcion as documento',
+                DB::raw("CASE 
+                    WHEN b.estado = 'E' THEN 'Editable'
+                    WHEN b.estado = 'F' THEN 'Finalizado'
+                    ELSE ''
+                END as estado"),
+                DB::raw("IFNULL(b.archivo,'') as archivo"),
+                DB::raw("IFNULL(b.ruta,'') as ruta")
+            ])
+            ->join('documentos as b', 'a.id_configuracion', '=', 'b.id_configuracion')
+            ->join('area as c', 'a.id_area', '=', 'c.id_area')
+            ->join('proceso as d', 'a.id_proceso', '=', 'd.id_proceso')
+            ->where('a.id_empresa', $idEmpresa)
+            ->where('a.id_periodo', $idPeriodo)
+            ->where('b.id_usuario_editor', $idUsuarioEditor)
+            ->orderBy('c.descripcion')
+            ->get();
+    }
+
+    /**
      * Save document from base64 string and update documento record
      * 
      * @param string $base64String Base64 encoded document string (PDF, Word, Excel)
      * @param int $idDocumento ID of the documento to update
+     * @param int $idUsuarioCargo ID of the user who is uploading the file
      * @return array Result with success status and file information
      */
-    public function saveImage(string $base64String, int $idDocumento): array
+    public function saveImage(string $base64String, int $idDocumento, int $idUsuarioCargo): array
     {
         try {
             // Find the documento
@@ -257,9 +301,9 @@ class DocumentoRepository implements DocumentoRepositoryInterface
                 }
             }
 
-            // Generate unique filename
-            $uniqueId = uniqid();
-            $fileName = $uniqueId . '.' . $extension;
+            // Generate unique filename with UUID (32 characters)
+            $uuid = str_replace('-', '', Str::uuid()->toString()); // Remove hyphens to get 32 chars
+            $fileName = $uuid . '.' . $extension;
             $fullFilePath = $fullPath . $fileName;
 
             // Delete old file if exists
@@ -282,7 +326,9 @@ class DocumentoRepository implements DocumentoRepositoryInterface
             // Update documento with new file information
             $updateResult = $this->update($idDocumento, [
                 'archivo' => $fileName,
-                'ruta' => $relativePath
+                'ruta' => $relativePath,
+                'fecha_cargo_archivo' => now(),
+                'id_usuario_cargo' => $idUsuarioCargo
             ]);
 
             if (!$updateResult) {
@@ -305,7 +351,9 @@ class DocumentoRepository implements DocumentoRepositoryInterface
                     'ruta' => $relativePath,
                     'full_path' => $fullFilePath,
                     'file_size' => strlen($documentData),
-                    'mime_type' => $mimeType
+                    'mime_type' => $mimeType,
+                    'fecha_cargo_archivo' => now()->toDateTimeString(),
+                    'id_usuario_cargo' => $idUsuarioCargo
                 ]
             ];
 
@@ -442,7 +490,9 @@ class DocumentoRepository implements DocumentoRepositoryInterface
             // Clear archivo and ruta fields
             $updateResult = $this->update($idDocumento, [
                 'archivo' => null,
-                'ruta' => null
+                'ruta' => null,
+                'fecha_cargo_archivo' => null,
+                'id_usuario_cargo' => null
             ]);
 
             if (!$updateResult) {

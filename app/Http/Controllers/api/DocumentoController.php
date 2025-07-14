@@ -192,6 +192,24 @@ class DocumentoController extends Controller
     }
 
     /**
+     * Get documentos by empresa, periodo and usuario editor
+     */
+    public function getDocumentosByEmpresaPeriodoEditor(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'id_empresa' => 'required|integer|exists:empresa,id_empresa',
+            'id_periodo' => 'required|integer|exists:periodo,id_periodo',
+            'id_usuario_editor' => 'required|integer|exists:users,id',
+        ]);
+
+        return response()->json($this->repository->getDocumentosByEmpresaPeriodoEditor(
+            $data['id_empresa'], 
+            $data['id_periodo'], 
+            $data['id_usuario_editor']
+        ));
+    }
+
+    /**
      * Save image from base64 string
      */
     public function saveImage(Request $request): JsonResponse
@@ -199,9 +217,10 @@ class DocumentoController extends Controller
         $data = $request->validate([
             'base64_string' => 'required|string',
             'id_documento' => 'required|integer|exists:documentos,id_documento',
+            'id_usuario_cargo' => 'required|integer|exists:users,id',
         ]);
 
-        $result = $this->repository->saveImage($data['base64_string'], $data['id_documento']);
+        $result = $this->repository->saveImage($data['base64_string'], $data['id_documento'], $data['id_usuario_cargo']);
         
         if ($result['success']) {
             return response()->json($result, 200);

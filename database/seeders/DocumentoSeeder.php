@@ -29,6 +29,8 @@ class DocumentoSeeder extends Seeder
                 'id_empresa' => 1,
                 'archivo' => 'manual_procedimientos_calidad.pdf',
                 'ruta' => '/documentos/calidad/',
+                'fecha_cargo_archivo' => now(),
+                'id_usuario_cargo' => 1,
             ],
             [
                 'id_configuracion' => 1,
@@ -41,6 +43,8 @@ class DocumentoSeeder extends Seeder
                 'id_empresa' => 1,
                 'archivo' => 'politica_seguridad_salud.docx',
                 'ruta' => '/documentos/seguridad/',
+                'fecha_cargo_archivo' => now(),
+                'id_usuario_cargo' => 1,
             ],
             [
                 'id_configuracion' => 2,
@@ -53,6 +57,8 @@ class DocumentoSeeder extends Seeder
                 'id_empresa' => 1,
                 'archivo' => null, // No file attached yet
                 'ruta' => '/documentos/procedimientos/',
+                'fecha_cargo_archivo' => null,
+                'id_usuario_cargo' => null,
             ],
         ];
 
