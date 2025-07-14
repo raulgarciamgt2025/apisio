@@ -93,4 +93,9 @@ interface DocumentoRepositoryInterface extends GenericRepositoryInterface
      * Delete final document file and clear archivo/ruta fields from documento
      */
     public function deleteFinalImage(int $idDocumento): array;
+
+    /**
+     * Archive document and update its status
+     */
+    public function archiveDocument(int $idUsuarioArchivo, int $idDocumento): array;
 }

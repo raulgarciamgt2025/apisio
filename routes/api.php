@@ -91,4 +91,5 @@ Route::middleware('auth:api')->group(function () {
     Route::delete('documentos/{id_documento}/delete-image', [DocumentoController::class, 'deleteImage']);
     Route::delete('documentos/{id_documento}/delete-image-final', [DocumentoController::class, 'deleteImageFinal']);
     Route::post('documentos/finalize', [DocumentoController::class, 'finalizeDocument']);
+    Route::post('documentos/archive', [DocumentoController::class, 'archiveDocument']);
 });

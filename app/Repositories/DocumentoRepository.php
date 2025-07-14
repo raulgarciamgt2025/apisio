@@ -217,7 +217,10 @@ class DocumentoRepository implements DocumentoRepositoryInterface
                     ELSE ''
                 END as estado"),
                 DB::raw("IFNULL(b.archivo,'') as archivo"),
-                DB::raw("IFNULL(b.ruta,'') as ruta")
+                DB::raw("IFNULL(b.ruta,'') as ruta"),
+                DB::raw("IFNULL(b.archivo_final,'') as archivo_final"),
+                DB::raw("IFNULL(b.ruta_final,'') as ruta_final")
+
             ])
             ->join('documentos as b', 'a.id_configuracion', '=', 'b.id_configuracion')
             ->join('area as c', 'a.id_area', '=', 'c.id_area')
@@ -795,6 +798,89 @@ class DocumentoRepository implements DocumentoRepositoryInterface
                 'data' => [
                     'id_documento' => $idDocumento,
                     'archivo_final_eliminado' => $documento->archivo_final
+                ]
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Error interno del servidor: ' . $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+    /**
+     * Archive document files and reset document to elaboration state
+     */
+    public function archiveDocument(int $idUsuarioArchivo, int $idDocumento): array
+    {
+        try {
+            // Find the documento
+            $documento = $this->find($idDocumento);
+            if (!$documento) {
+                return [
+                    'success' => false,
+                    'message' => 'Documento no encontrado',
+                    'data' => null
+                ];
+            }
+
+            // Create new record in documentos_archivo with current document data
+            $archivoData = [
+                'id_documento' => $documento->id_documento,
+                'id_usuario_archivo' => $idUsuarioArchivo,
+                'fecha_archivo' => now(),
+                'archivo' => $documento->archivo ?? '',
+                'ruta' => $documento->ruta ?? '',
+                'fecha_cargo_archivo' => $documento->fecha_cargo_archivo ?? now(),
+                'id_usuario_cargo' => $documento->id_usuario_cargo ?? $idUsuarioArchivo,
+                'archivo_final' => $documento->archivo_final ?? '',
+                'id_usuario_cargo_archivo_final' => $documento->id_usuario_cargo_archivo_final ?? $idUsuarioArchivo,
+                'fecha_cargo_archivo_final' => $documento->fecha_cargo_archivo_final ?? now(),
+                'ruta_final' => $documento->ruta_final ?? '',
+            ];
+
+            // Create the archive record
+            $documentosArchivo = \App\Models\DocumentosArchivo::create($archivoData);
+
+            if (!$documentosArchivo) {
+                return [
+                    'success' => false,
+                    'message' => 'Error al crear el registro de archivo',
+                    'data' => null
+                ];
+            }
+
+            // Empty the document file fields and set estado to 'E'
+            $updateResult = $this->update($idDocumento, [
+                'archivo' => null,
+                'ruta' => null,
+                'fecha_cargo_archivo' => null,
+                'id_usuario_cargo' => null,
+                'archivo_final' => null,
+                'id_usuario_cargo_archivo_final' => null,
+                'fecha_cargo_archivo_final' => null,
+                'ruta_final' => null,
+                'estado' => 'E'
+            ]);
+
+            if (!$updateResult) {
+                return [
+                    'success' => false,
+                    'message' => 'Error al actualizar el documento',
+                    'data' => null
+                ];
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Documento archivado exitosamente y estado cambiado a elaboración',
+                'data' => [
+                    'id_documento' => $idDocumento,
+                    'id_archivo' => $documentosArchivo->id_archivo,
+                    'id_usuario_archivo' => $idUsuarioArchivo,
+                    'fecha_archivo' => $documentosArchivo->fecha_archivo,
+                    'documento_actualizado' => $this->find($idDocumento)
                 ]
             ];
         } catch (\Exception $e) {

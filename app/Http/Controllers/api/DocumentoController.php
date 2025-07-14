@@ -338,6 +338,11 @@ class DocumentoController extends Controller
         );
         
         if ($result['success']) {
+            // Update document estado to 'F' (Finalizado) when final file is uploaded
+            $this->repository->update($data['id_documento'], [
+                'estado' => Documento::ESTADO_FINALIZADO
+            ]);
+            
             return response()->json($result, 200);
         } else {
             return response()->json($result, 400);
@@ -364,6 +369,28 @@ class DocumentoController extends Controller
     public function deleteImageFinal(int $idDocumento): JsonResponse
     {
         $result = $this->repository->deleteFinalImage($idDocumento);
+        
+        if ($result['success']) {
+            return response()->json($result, 200);
+        } else {
+            return response()->json($result, 400);
+        }
+    }
+
+    /**
+     * Archive document files and reset to elaboration state
+     */
+    public function archiveDocument(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'id_documento' => 'required|integer|exists:documentos,id_documento',
+            'id_usuario_archivo' => 'required|integer|exists:users,id',
+        ]);
+
+        $result = $this->repository->archiveDocument(
+            $data['id_usuario_archivo'], 
+            $data['id_documento']
+        );
         
         if ($result['success']) {
             return response()->json($result, 200);
